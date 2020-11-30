@@ -10,4 +10,4 @@ const WhatsappSchema = new mongoose_1.default.Schema({
     timestamp: String,
     received: Boolean,
 });
-exports.default = mongoose_1.default.model('messagecontents', WhatsappSchema);
+exports.default = mongoose_1.default.model('messageContent', WhatsappSchema);

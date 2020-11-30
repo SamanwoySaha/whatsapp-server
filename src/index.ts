@@ -1,11 +1,20 @@
 import express from 'express';
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import mongoose from 'mongoose';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import Messages from './dbMessages';
 require('dotenv').config();
+import Pusher from 'pusher';
 const port = process.env.PORT || 5000;
+
+const pusher = new Pusher({
+    appId: "1115107",
+    key: `${process.env.PUSHER_KEY}`,
+    secret: `${process.env.PUSHER_SECRET}`,
+    cluster: "eu",
+    useTLS: true
+});
 
 const app = express();
 
@@ -18,6 +27,32 @@ mongoose.connect(url, {
     useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true,
+});
+
+const db = mongoose.connection;
+db.once("open", () => {
+    console.log("DB connected");
+
+    const msgCollection = db.collection("messagecontents");
+    const changeStream = msgCollection.watch();
+
+    changeStream.on("change", (change) => {
+        console.log(change);
+
+        if (change.operationType === 'insert') {
+            const messageDetails = change.fullDocument;
+            pusher.trigger('messages', 'inserted', 
+                { 
+                    name: messageDetails.name,
+                    message: messageDetails.message,
+                    timestamp: messageDetails.timestamp,
+                    received: messageDetails.received,
+                }
+            );
+        } else {
+            console.log('Error trigger pusher');
+        }
+    })
 });
 interface Message {
     message: string, 

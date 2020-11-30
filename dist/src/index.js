@@ -9,12 +9,12 @@ const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const dbMessages_1 = __importDefault(require("./dbMessages"));
 require('dotenv').config();
-const pusher_1 = __importDefault(require("pusher"));
 const port = process.env.PORT || 5000;
+const pusher_1 = __importDefault(require("pusher"));
 const pusher = new pusher_1.default({
     appId: "1115107",
-    key: `${process.env.PUSHER_KEY}`,
-    secret: `${process.env.PUSHER_SECRET}`,
+    key: "677a639ac12bb7cadbb3",
+    secret: "4f0bb05e512d17c17590",
     cluster: "eu",
     useTLS: true
 });
@@ -37,10 +37,8 @@ db.once("open", () => {
         if (change.operationType === 'insert') {
             const messageDetails = change.fullDocument;
             pusher.trigger('messages', 'inserted', {
-                name: messageDetails.name,
-                message: messageDetails.message,
-                timestamp: messageDetails.timestamp,
-                received: messageDetails.received,
+                name: messageDetails.user,
+                message: messageDetails.message
             });
         }
         else {
