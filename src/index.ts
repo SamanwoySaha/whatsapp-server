@@ -31,14 +31,10 @@ mongoose.connect(url, {
 
 const db = mongoose.connection;
 db.once("open", () => {
-    console.log("DB connected");
-
     const msgCollection = db.collection("messagecontents");
     const changeStream = msgCollection.watch();
 
     changeStream.on("change", (change) => {
-        console.log(change);
-
         if (change.operationType === 'insert') {
             const messageDetails = change.fullDocument;
             pusher.trigger('messages', 'inserted', 
@@ -46,7 +42,6 @@ db.once("open", () => {
                     name: messageDetails.name,
                     message: messageDetails.message,
                     timestamp: messageDetails.timestamp,
-                    received: messageDetails.received,
                 }
             );
         } else {
@@ -54,11 +49,11 @@ db.once("open", () => {
         }
     })
 });
+
 interface Message {
     message: string, 
     name: string, 
     timestamp: string,
-    received: boolean
 }
 
 app.get("/", (req: Request, res: Response) => {
@@ -66,14 +61,14 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get('/messages/sync', (req: Request, res: Response) => {
-    Messages.find((err, data) => {
+    Messages.find((err: Error, data: Message) => {
         if (err) {
             res.status(500).send(err);
         } else {
             res.status(200).send(data);
         }
     })
-})
+});
 
 app.post('/messages/new', (req: Request, res: Response) => {
     const dbMessage = req.body;
@@ -85,8 +80,6 @@ app.post('/messages/new', (req: Request, res: Response) => {
             res.status(201).send(`new message created: \n ${data}`);
         }
     })
-})
-
-app.listen(port, () => {
-    console.log('listening on port');
 });
+
+app.listen(port);

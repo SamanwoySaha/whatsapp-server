@@ -29,18 +29,15 @@ mongoose_1.default.connect(url, {
 });
 const db = mongoose_1.default.connection;
 db.once("open", () => {
-    console.log("DB connected");
     const msgCollection = db.collection("messagecontents");
     const changeStream = msgCollection.watch();
     changeStream.on("change", (change) => {
-        console.log(change);
         if (change.operationType === 'insert') {
             const messageDetails = change.fullDocument;
             pusher.trigger('messages', 'inserted', {
                 name: messageDetails.name,
                 message: messageDetails.message,
                 timestamp: messageDetails.timestamp,
-                received: messageDetails.received,
             });
         }
         else {
@@ -72,6 +69,4 @@ app.post('/messages/new', (req, res) => {
         }
     });
 });
-app.listen(port, () => {
-    console.log('listening on port');
-});
+app.listen(port);
